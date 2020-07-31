@@ -34,9 +34,9 @@ type socketMessage struct {
 	data string `json:"data"`
 }
 
-type videoData struct {
-	time string `json:"time"`
-	start string `json:"start"`
+type VideoData struct {
+	Time string `json:"time"`
+	Start string `json:"start"`
 }
 
 // Read pumps messages from the conn connection to the hub.
@@ -90,11 +90,9 @@ func (s Subscription) Read() {
 		if len(s.Playlist) > 0 {
 			videoData := getVideoData()
 
-			jsonData, _ := json.Marshal(&videoData)
-			var a interface{}
-			json.Unmarshal(jsonData, &a)
-			log.Println(a)
-			m := Message{jsonData, s.Room}
+			jsData, _ := json.Marshal(videoData)
+
+			m := Message{jsData, s.Room}
 			Instance.Broadcast <- m
 		}
 
@@ -132,7 +130,7 @@ func (s Subscription) Write() {
 }
 
 
-func getVideoData() videoData {
-	data := videoData{time: "2", start: "12"}
+func getVideoData() VideoData {
+	data := VideoData{Time: "2", Start: "12"}
 	return data
 }
