@@ -2,13 +2,14 @@ package transport
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"goproject/auth"
 	json2 "goproject/json"
 	"goproject/responses"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 // HTTP represents auth http service
@@ -20,9 +21,9 @@ type HTTP struct {
 func NewHTTP(svc auth.Service, r *mux.Router) {
 	h := HTTP{svc}
 
-	rp := r.PathPrefix("/auth/").Subrouter()
-	rp.HandleFunc("/auth/register", json2.SetMiddlewareJSON(h.register)).Methods("POST")
-	rp.HandleFunc("/auth/users", json2.SetMiddlewareJSON(h.register)).Methods("GET")
+	rp := r.PathPrefix("/auth").Subrouter()
+	rp.HandleFunc("/register", json2.SetMiddlewareJSON(h.register)).Methods("POST")
+	rp.HandleFunc("/users", json2.SetMiddlewareJSON(h.getUsers)).Methods("GET")
 }
 
 func (h *HTTP) register(w http.ResponseWriter, r *http.Request) {
