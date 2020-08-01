@@ -27,16 +27,17 @@ type Subscription struct {
 	Conn     *conn.Connection
 	Room     string
 	Playlist []string
+	CurVideoData VideoData
 }
 
-type socketMessage struct {
-	action string `json:"action"`
-	data string `json:"data"`
+type SocketMessage struct {
+	Action string `json:"action"`
+	Data VideoData `json:"data"`
 }
 
 type VideoData struct {
+	Url string `json:"url"`
 	Time string `json:"time"`
-	Start string `json:"start"`
 }
 
 // Read pumps messages from the conn connection to the hub.
@@ -74,26 +75,35 @@ func (s Subscription) Read() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		var data string
-		err = json.Unmarshal(objmap["data"], &data)
-		if err != nil {
-			log.Fatal(err)
-		}
 
-		// payload := socketMessage{action: action, data: data}
+		var data string
+		if objmap["data"] != nil {
+			err = json.Unmarshal(objmap["data"], &data)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
 
 		if action == "REQUEST" {
 			s.Playlist = append(s.Playlist, data)
 		}
 
-		// If there is something in the playlist send the video data to all the conns
-		if len(s.Playlist) > 0 {
-			videoData := getVideoData()
+		if action == "PLAY_VIDEO" {
+			// If there is something in the playlist send the video data to all the conns
+			if len(s.Playlist) > 0 {
+				videoData := getVideoData(s.Playlist[0])
+				res := SocketMessage{
+					Action: "PLAY_VIDEO",
+					Data: videoData,
+				}
 
-			jsData, _ := json.Marshal(videoData)
+				s.CurVideoData = videoData
 
-			m := Message{jsData, s.Room}
-			Instance.Broadcast <- m
+				jsData, _ := json.Marshal(res)
+
+				m := Message{jsData, s.Room}
+				Instance.Broadcast <- m
+			}
 		}
 
 		m := Message{msg, s.Room}
@@ -130,7 +140,7 @@ func (s Subscription) Write() {
 }
 
 
-func getVideoData() VideoData {
-	data := VideoData{Time: "2", Start: "12"}
+func getVideoData(url string) VideoData {
+	data := VideoData{Time: "2", Url: url}
 	return data
 }
