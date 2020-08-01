@@ -24,20 +24,21 @@ type Message struct {
 }
 
 type Subscription struct {
-	Conn     *conn.Connection
-	Room     string
-	Playlist []string
+	Conn         *conn.Connection
+	Room         string
+	Playlist     []string
 	CurVideoData VideoData
 }
 
 type SocketMessage struct {
-	Action string `json:"action"`
-	Data VideoData `json:"data"`
+	Action string    `json:"action"`
+	Data   VideoData `json:"data"`
 }
 
 type VideoData struct {
-	Url string `json:"url"`
-	Time string `json:"time"`
+	Url     string `json:"url"`
+	Time    int    `json:"time"`
+	Playing bool   `json:"playing"`
 }
 
 // Read pumps messages from the conn connection to the hub.
@@ -85,19 +86,43 @@ func (s Subscription) Read() {
 		}
 
 		if action == "REQUEST" {
+			// TODO: Implement queue separatly
 			s.Playlist = append(s.Playlist, data)
+
+			s.CurVideoData = VideoData{
+				Time:    0,
+				Playing: false,
+				Url:     data,
+			}
 		}
 
 		if action == "PLAY_VIDEO" {
+			// TODO: Abstract these methods
 			// If there is something in the playlist send the video data to all the conns
 			if len(s.Playlist) > 0 {
-				videoData := getVideoData(s.Playlist[0])
+				s.CurVideoData.Playing = true
+				videoData := s.CurVideoData
+
 				res := SocketMessage{
 					Action: "PLAY_VIDEO",
-					Data: videoData,
+					Data:   videoData,
 				}
 
-				s.CurVideoData = videoData
+				jsData, _ := json.Marshal(res)
+
+				m := Message{jsData, s.Room}
+				Instance.Broadcast <- m
+			}
+		}
+
+		if action == "PAUSE_VIDEO" {
+			if len(s.Playlist) > 0 {
+				s.CurVideoData.Playing = false
+				videoData := s.CurVideoData
+				res := SocketMessage{
+					Action: "PAUSE_VIDEO",
+					Data:   videoData,
+				}
 
 				jsData, _ := json.Marshal(res)
 
@@ -108,6 +133,7 @@ func (s Subscription) Read() {
 
 		m := Message{msg, s.Room}
 		Instance.Broadcast <- m
+
 	}
 }
 
@@ -137,10 +163,4 @@ func (s Subscription) Write() {
 			}
 		}
 	}
-}
-
-
-func getVideoData(url string) VideoData {
-	data := VideoData{Time: "2", Url: url}
-	return data
 }

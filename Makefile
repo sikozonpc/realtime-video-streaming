@@ -4,8 +4,8 @@ PORT := 7777
 ADDR := "localhost"
 DB_HOST := "localhost"
 DB_USER := "postgres"
-DB_NAME := "psql_with_go"
-DB_PORT := "3000"
+DB_NAME := "streaming_server"
+DB_PORT := "5432"
 DB_PASSWORD := "batata123"
 
 run-api:
