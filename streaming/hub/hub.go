@@ -1,27 +1,29 @@
 package hub
 
 import (
-	"goproject/streaming/conn"
 	"log"
 )
 
 // Hub maintains the set of active connections and broadcasts messages to the connections
 type Hub struct {
 	// Registered connections.
-	Rooms map[string]map[*conn.Connection]bool
+	Rooms map[string]map[*Connection]bool
 	// Inbound messages from the connections.
 	Broadcast chan Message
 	// Register requests from the connections.
 	Register chan Subscription
 	// Unregister requests from connections.
 	Unregister chan Subscription
+	// RoomsData registred rooms data
+	RoomsVideoData map[string]VideoData
 }
 
 var Instance = Hub{
-	Broadcast:  make(chan Message),
-	Register:   make(chan Subscription),
-	Unregister: make(chan Subscription),
-	Rooms:      make(map[string]map[*conn.Connection]bool),
+	Broadcast:      make(chan Message),
+	Register:       make(chan Subscription),
+	Unregister:     make(chan Subscription),
+	Rooms:          make(map[string]map[*Connection]bool),
+	RoomsVideoData: make(map[string]VideoData),
 }
 
 func (h *Hub) Run() {
@@ -32,7 +34,7 @@ func (h *Hub) Run() {
 		case s := <-h.Register:
 			connections := h.Rooms[s.Room]
 			if connections == nil {
-				connections = make(map[*conn.Connection]bool)
+				connections = make(map[*Connection]bool)
 				h.Rooms[s.Room] = connections
 			}
 			h.Rooms[s.Room][s.Conn] = true

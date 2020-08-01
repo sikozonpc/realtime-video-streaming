@@ -2,14 +2,14 @@ package transport
 
 import (
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"goproject/responses"
 	"goproject/streaming"
-	"goproject/streaming/conn"
 	"goproject/streaming/hub"
 	"log"
 	"net/http"
+
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 
 	"github.com/gorilla/websocket"
 )
@@ -51,9 +51,13 @@ func (h *WS) handleRoomConn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c := &conn.Connection{Send: make(chan []byte, 256), Conn: ws}
+	c := &hub.Connection{Send: make(chan []byte, 256), Conn: ws}
 	sub := hub.Subscription{Conn: c, Room: roomID}
 	hub.Instance.Register <- sub
+
+	// Sync to current room
+	sub.SyncToRoom(roomID)
+
 	go sub.Write()
 	go sub.Read()
 }

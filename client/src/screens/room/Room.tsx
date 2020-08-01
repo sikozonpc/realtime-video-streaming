@@ -17,22 +17,35 @@ const Room: React.FC<Props> = () => {
   })
   const [isMediaReady, setMediaReady] = useState(false)
   const [mediaPlaying, setMediaPlaying] = useState(false)
+  const [isSeeking, setIsSeeking] = useState(false)
 
   const { roomID } = useParams()
 
+  //TODO: THIS NEEDS AJUSTMENTS
+/* 
   useEffect(() => {
-    const loadedPlayer = playerRef.current
-
-    if (videoData.time && loadedPlayer) {
-      loadedPlayer.seekTo(videoData.time)
+    const mediaPlayer = playerRef.current
+    
+    if (videoData.time && mediaPlayer) {
+      console.log("SEEKING TO", videoData.time)
+      mediaPlayer.seekTo(videoData.time, 'seconds')
+      setIsSeeking(true)
     }
-  }, [videoData.time, playerRef])
+
+  }, [videoData.time]) */
 
   const messageListener = (ev: MessageEvent) => {
     const res = JSON.parse(ev.data)
     console.log(JSON.parse(ev.data))
 
     switch (res?.action) {
+      case "SYNC": {
+        if (!res.data) return
+
+        syncVideo(res.data)
+        return
+      }
+
       case "PLAY_VIDEO": {
         console.log(res.data)
 
@@ -68,7 +81,9 @@ const Room: React.FC<Props> = () => {
   const handleRequestVideo = () => {
     sendMessage({
       action: "REQUEST",
-      data: videoUrl
+      data: {
+        url: videoUrl,
+      }
     })
 
     setVideoData({
@@ -86,17 +101,48 @@ const Room: React.FC<Props> = () => {
   }
 
   const handlePlay = () => {
-    sendMessage({
-      action: "PLAY_VIDEO",
-    })
+    console.log("PLAYING...")
+    if (!playerRef.current) {
+      console.log("No REF to media player found")
+      return
+    }
+    
+    if (!isSeeking) {
+      console.log("SENDING!!")
+      sendMessage({
+        action: "PLAY_VIDEO",
+        data: {
+          time: playerRef.current.getCurrentTime(),
+          url: videoData.url,
+        }
+      })
+    }
 
+    setIsSeeking(false)
     playMedia()
   }
 
   const handlePause = () => {
+    if (!playerRef.current) {
+      console.log("No REF to media player found")
+      return
+    }
+
+        setIsSeeking(false)
+
     sendMessage({
       action: "PAUSE_VIDEO",
+      data: {
+        time: playerRef.current.getCurrentTime(),
+        url: videoData.url,
+      }
     })
+
+    pauseMedia()
+  }
+
+  const handleSeek = () => {
+    console.log("SEEKING")
   }
 
   const playMedia = () => setMediaPlaying(true)
@@ -114,6 +160,7 @@ const Room: React.FC<Props> = () => {
         ref={playerRef}
         playing={mediaPlaying && isMediaReady}
         url={videoData.url || ''}
+        onSeek={handleSeek}
         onPlay={handlePlay}
         onPause={handlePause}
         onEnded={undefined}

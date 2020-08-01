@@ -1,8 +1,9 @@
-package conn
+package hub
 
 import (
-	"github.com/gorilla/websocket"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 // Time allowed to write a message to the peer.
@@ -19,5 +20,6 @@ type Connection struct {
 func (c *Connection) Write(mt int, payload []byte) error {
 	dt := time.Now().Add(writeWait)
 	c.Conn.SetWriteDeadline(dt)
+
 	return c.Conn.WriteMessage(mt, payload)
 }
