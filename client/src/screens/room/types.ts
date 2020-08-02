@@ -6,3 +6,9 @@ export type RoomData = {
 export interface RoomProps {
   roomData: RoomData,
 }
+
+export interface VideoData {
+  url: string,
+  time: number,
+  playing: boolean,
+}

@@ -38,12 +38,23 @@ func (h *Hub) Run() {
 				h.Rooms[s.Room] = connections
 			}
 			h.Rooms[s.Room][s.Conn] = true
-			log.Printf("New client registered %v \n", s)
+
+			log.Printf("New client registered %v, to room %s, with %v connections \n",
+				s.Conn.Conn.RemoteAddr(),
+				s.Room,
+				len(h.Rooms[s.Room]),
+			)
 		case s := <-h.Unregister:
 			connections := h.Rooms[s.Room]
 			if connections != nil {
 				if _, ok := connections[s.Conn]; ok {
 					delete(connections, s.Conn)
+
+					// No more users in the room
+					if len(h.Rooms[s.Room]) <= 0 {
+						h.deleteRoom(s)
+					}
+
 					close(s.Conn.Send)
 					if len(connections) == 0 {
 						delete(h.Rooms, s.Room)
@@ -74,4 +85,13 @@ func CheckRoomAvailability(id string) bool {
 		return true
 	}
 	return false
+}
+
+func (h *Hub) deleteRoom(s Subscription) {
+	log.Printf("[server] Room %s deleted because not active users found: %v users \n",
+		s.Room,
+		len(h.Rooms[s.Room]),
+	)
+
+	delete(h.RoomsVideoData, s.Room)
 }

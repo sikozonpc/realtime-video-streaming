@@ -25,9 +25,8 @@ type Message struct {
 // TODO: NEED TO PUSH ROOM VIDEO DATA TO ROOM NOT SUB!!!
 
 type Subscription struct {
-	Conn     *Connection
-	Room     string
-	Playlist []string
+	Conn *Connection
+	Room string
 }
 
 type SocketMessage struct {
@@ -87,7 +86,6 @@ func (s Subscription) Read() {
 
 		if action == "REQUEST" {
 			// TODO: Implement queue separatly
-			s.Playlist = append(s.Playlist, data.Url)
 
 			Instance.RoomsVideoData[s.Room] = VideoData{
 				Time:    0,
@@ -96,10 +94,12 @@ func (s Subscription) Read() {
 			}
 		}
 
+		log.Printf("CUUR PLAYING %s \n", Instance.RoomsVideoData[s.Room].Url)
+
 		if action == "PLAY_VIDEO" {
 			// TODO: Abstract these methods
 			// If there is something in the playlist send the video data to all the conns
-			if len(s.Playlist) > 0 {
+			if Instance.RoomsVideoData[s.Room].Url != "" {
 				Instance.RoomsVideoData[s.Room] = VideoData{
 					Time:    data.Time,
 					Url:     Instance.RoomsVideoData[s.Room].Url,
@@ -119,12 +119,15 @@ func (s Subscription) Read() {
 		}
 
 		if action == "PAUSE_VIDEO" {
-			if len(s.Playlist) > 0 {
+			//TODO: check for playlist
+			if Instance.RoomsVideoData[s.Room].Url != "" {
 				Instance.RoomsVideoData[s.Room] = VideoData{
 					Time:    data.Time,
 					Url:     Instance.RoomsVideoData[s.Room].Url,
 					Playing: false,
 				}
+
+				log.Println(Instance.RoomsVideoData[s.Room].Time)
 
 				res := SocketMessage{
 					Action: "PAUSE_VIDEO",
@@ -140,7 +143,6 @@ func (s Subscription) Read() {
 
 		m := Message{msg, s.Room}
 		Instance.Broadcast <- m
-
 	}
 }
 

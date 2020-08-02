@@ -3,36 +3,33 @@ import { useParams } from 'react-router'
 import ReactPlayer from 'react-player'
 
 import useWebsocket from '../../hooks/useWebsocket'
-import { RoomProps as Props } from './types'
+import { RoomProps as Props, VideoData } from './types'
 
 
 const Room: React.FC<Props> = () => {
   const playerRef = useRef<ReactPlayer | null>(null)
 
-  const [sessionData, setSessionData] = useState()
   const [videoUrl, setVideo] = useState("")
-  const [videoData, setVideoData] = useState({
+  const [videoData, setVideoData] = useState<VideoData>({
     time: 0,
     url: "",
+    playing: false,
   })
   const [isMediaReady, setMediaReady] = useState(false)
-  const [mediaPlaying, setMediaPlaying] = useState(false)
   const [isSeeking, setIsSeeking] = useState(false)
 
   const { roomID } = useParams()
 
-  //TODO: THIS NEEDS AJUSTMENTS
-/* 
-  useEffect(() => {
-    const mediaPlayer = playerRef.current
-    
-    if (videoData.time && mediaPlayer) {
-      console.log("SEEKING TO", videoData.time)
-      mediaPlayer.seekTo(videoData.time, 'seconds')
-      setIsSeeking(true)
-    }
 
-  }, [videoData.time]) */
+  /*   useEffect(() => {
+      const mediaPlayer = playerRef.current
+  
+      if (videoData.time && mediaPlayer) {
+        console.log("SEEKING TO", videoData.time)
+        mediaPlayer.seekTo(videoData.time, 'seconds')
+        setIsSeeking(true)
+      }
+    }, [videoData.time]) */
 
   const messageListener = (ev: MessageEvent) => {
     const res = JSON.parse(ev.data)
@@ -47,36 +44,30 @@ const Room: React.FC<Props> = () => {
       }
 
       case "PLAY_VIDEO": {
-        console.log(res.data)
-
-        if (!res.data) return
-
-        setVideoData({
-          url: res.data.url,
-          time: Number(res.data.time),
-        })
-
-        playMedia()
-        return
-      }
-
-      case "PAUSE_VIDEO": {
         if (!res.data) return
 
         syncVideo(res.data)
         return
       }
 
+      case "PAUSE_VIDEO": {
+        if (!res.data) return
+
+        setVideoData({
+          url: res.data.url,
+          time: res.data.time,
+          playing: res.data.playing,
+        })
+    
+        return
+      }
+
       default: console.log("Nothing", res.data)
     }
-
-    setSessionData(res)
   }
+
   const { sendMessage } = useWebsocket(`ws://localhost:7777/ws/${roomID}`, messageListener)
 
-  useEffect(() => {
-    console.log('got new sessionData: ', sessionData)
-  }, [sessionData])
 
   const handleRequestVideo = () => {
     sendMessage({
@@ -89,15 +80,21 @@ const Room: React.FC<Props> = () => {
     setVideoData({
       url: videoUrl,
       time: 0,
+      playing: false,
     })
   }
 
-  const syncVideo = (newVideoData: any) => {
+  const syncVideo = (newVideoData: VideoData) => {
     setVideoData({
       url: newVideoData.url,
       time: newVideoData.time,
+      playing: newVideoData.playing,
     })
-    setMediaPlaying(newVideoData.playing)
+
+    if (playerRef.current) {
+      setIsSeeking(true)
+      playerRef.current.seekTo(newVideoData.time, 'seconds')
+    }
   }
 
   const handlePlay = () => {
@@ -106,20 +103,22 @@ const Room: React.FC<Props> = () => {
       console.log("No REF to media player found")
       return
     }
-    
+
     if (!isSeeking) {
-      console.log("SENDING!!")
+      console.log("SENDING PLAY!!")
       sendMessage({
         action: "PLAY_VIDEO",
         data: {
           time: playerRef.current.getCurrentTime(),
           url: videoData.url,
+          playing: true,
         }
       })
     }
 
+    console.log(playerRef.current.getCurrentTime())
+
     setIsSeeking(false)
-    playMedia()
   }
 
   const handlePause = () => {
@@ -128,25 +127,34 @@ const Room: React.FC<Props> = () => {
       return
     }
 
-        setIsSeeking(false)
+    if (!isSeeking) {
+      console.log("SENDING PAUSE!!")
+      sendMessage({
+        action: "PAUSE_VIDEO",
+        data: {
+          time: playerRef.current.getCurrentTime(),
+          url: videoData.url,
+        }
+      })
+    }
 
-    sendMessage({
-      action: "PAUSE_VIDEO",
-      data: {
-        time: playerRef.current.getCurrentTime(),
-        url: videoData.url,
-      }
-    })
+    console.log(playerRef.current.getCurrentTime())
 
-    pauseMedia()
+    setIsSeeking(false)
   }
 
   const handleSeek = () => {
     console.log("SEEKING")
+    sendMessage({
+      action: "PLAY_VIDEO",
+      data: {
+        time: playerRef?.current?.getCurrentTime(),
+        url: videoData.url,
+        playing: true,
+      }
+    })
   }
 
-  const playMedia = () => setMediaPlaying(true)
-  const pauseMedia = () => setMediaPlaying(false)
   const handleMediaReady = (player: ReactPlayer) => {
     setMediaReady(true)
   }
@@ -158,13 +166,14 @@ const Room: React.FC<Props> = () => {
 
       <ReactPlayer
         ref={playerRef}
-        playing={mediaPlaying && isMediaReady}
+        playing={videoData.playing && isMediaReady}
         url={videoData.url || ''}
         onSeek={handleSeek}
         onPlay={handlePlay}
         onPause={handlePause}
-        onEnded={undefined}
+        onEnded={undefined} // TODO: Notify video ended 
         onReady={handleMediaReady}
+        controls
       />
     </div>
   )
