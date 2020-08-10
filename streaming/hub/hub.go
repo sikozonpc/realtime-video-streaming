@@ -15,17 +15,19 @@ type Hub struct {
 	// Unregister requests from connections.
 	Unregister chan Subscription
 	// RoomsData registred rooms data
-	RoomsVideoData map[string]VideoData
+	RoomsPlaylist map[string]Playlist
 }
 
+// Instance is the global Hub instance that manages the connected subscriptions
 var Instance = Hub{
-	Broadcast:      make(chan Message),
-	Register:       make(chan Subscription),
-	Unregister:     make(chan Subscription),
-	Rooms:          make(map[string]map[*Connection]bool),
-	RoomsVideoData: make(map[string]VideoData),
+	Broadcast:     make(chan Message),
+	Register:      make(chan Subscription),
+	Unregister:    make(chan Subscription),
+	Rooms:         make(map[string]map[*Connection]bool),
+	RoomsPlaylist: make(map[string]Playlist),
 }
 
+// Run the Hub instance
 func (h *Hub) Run() {
 	log.Println("Hub started")
 
@@ -93,5 +95,5 @@ func (h *Hub) deleteRoom(s Subscription) {
 		len(h.Rooms[s.Room]),
 	)
 
-	delete(h.RoomsVideoData, s.Room)
+	delete(h.RoomsPlaylist, s.Room)
 }

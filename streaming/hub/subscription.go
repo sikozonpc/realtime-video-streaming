@@ -84,31 +84,27 @@ func (s Subscription) Read() {
 
 		log.Println(data)
 
-		if action == "REQUEST" {
-			// TODO: Implement queue separatly
-
-			Instance.RoomsVideoData[s.Room] = VideoData{
-				Time:    0,
-				Playing: false,
-				Url:     data.Url,
+		switch action {
+		case "REQUEST":
+			if Instance.RoomsPlaylist[s.Room] != nil {
+				Instance.RoomsPlaylist[s.Room] = append(Instance.RoomsPlaylist[s.Room], VideoData{
+					Time:    0,
+					Playing: false,
+					Url:     data.Url,
+				})
 			}
-		}
 
-		log.Printf("CUUR PLAYING %s \n", Instance.RoomsVideoData[s.Room].Url)
-
-		if action == "PLAY_VIDEO" {
-			// TODO: Abstract these methods
-			// If there is something in the playlist send the video data to all the conns
-			if Instance.RoomsVideoData[s.Room].Url != "" {
-				Instance.RoomsVideoData[s.Room] = VideoData{
+		case "PLAY_VIDEO":
+			if len(Instance.RoomsPlaylist[s.Room]) > 0 {
+				Instance.RoomsPlaylist[s.Room][0] = VideoData{
 					Time:    data.Time,
-					Url:     Instance.RoomsVideoData[s.Room].Url,
+					Url:     Instance.RoomsPlaylist[s.Room][0].Url,
 					Playing: true,
 				}
 
 				res := SocketMessage{
 					Action: "PLAY_VIDEO",
-					Data:   Instance.RoomsVideoData[s.Room],
+					Data:   Instance.RoomsPlaylist[s.Room][0],
 				}
 
 				jsData, _ := json.Marshal(res)
@@ -116,22 +112,18 @@ func (s Subscription) Read() {
 				m := Message{jsData, s.Room}
 				Instance.Broadcast <- m
 			}
-		}
 
-		if action == "PAUSE_VIDEO" {
-			//TODO: check for playlist
-			if Instance.RoomsVideoData[s.Room].Url != "" {
-				Instance.RoomsVideoData[s.Room] = VideoData{
+		case "PAUSE_VIDEO":
+			if len(Instance.RoomsPlaylist[s.Room]) > 0 {
+				Instance.RoomsPlaylist[s.Room][0] = VideoData{
 					Time:    data.Time,
-					Url:     Instance.RoomsVideoData[s.Room].Url,
+					Url:     Instance.RoomsPlaylist[s.Room][0].Url,
 					Playing: false,
 				}
 
-				log.Println(Instance.RoomsVideoData[s.Room].Time)
-
 				res := SocketMessage{
 					Action: "PAUSE_VIDEO",
-					Data:   Instance.RoomsVideoData[s.Room],
+					Data:   Instance.RoomsPlaylist[s.Room][0],
 				}
 
 				jsData, _ := json.Marshal(res)
@@ -139,6 +131,13 @@ func (s Subscription) Read() {
 				m := Message{jsData, s.Room}
 				Instance.Broadcast <- m
 			}
+
+		default:
+			log.Printf("No valid action sent from Client, ACTION: %s \n", action)
+		}
+
+		if len(Instance.RoomsPlaylist[s.Room]) > 0 {
+			log.Printf("CUUR PLAYING %s \n", Instance.RoomsPlaylist[s.Room][0].Url)
 		}
 
 		m := Message{msg, s.Room}
@@ -176,9 +175,13 @@ func (s Subscription) Write() {
 
 // SyncToRoom sends current media playing data to connection
 func (s Subscription) SyncToRoom(roomID string) {
+	if len(Instance.RoomsPlaylist[roomID]) <= 0 {
+		return
+	}
+
 	msg := SocketMessage{
 		Action: "SYNC",
-		Data:   Instance.RoomsVideoData[roomID],
+		Data:   Instance.RoomsPlaylist[roomID][0],
 	}
 	log.Println(msg)
 	s.Conn.Conn.WriteJSON(msg)
