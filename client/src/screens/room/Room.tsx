@@ -21,44 +21,43 @@ const Room: React.FC<Props> = () => {
   const { roomID } = useParams()
 
 
-  /*   useEffect(() => {
-      const mediaPlayer = playerRef.current
-  
-      if (videoData.time && mediaPlayer) {
-        console.log("SEEKING TO", videoData.time)
-        mediaPlayer.seekTo(videoData.time, 'seconds')
-        setIsSeeking(true)
-      }
-    }, [videoData.time]) */
-
   const messageListener = (ev: MessageEvent) => {
     const res = JSON.parse(ev.data)
     console.log(JSON.parse(ev.data))
 
-    switch (res?.action) {
-      case "SYNC": {
+    if (!res || !res.action) {
+      console.warn("No action to handle")
+      return
+    }
+
+    switch (res.action) {
+      case "REQUEST": {
         if (!res.data) return
 
-        syncVideo(res.data)
+        syncVideoWithServer(res.data)
+        return
+      }
+
+      case "SYNC": {
+        if (!res.data || !res.data.url) return
+
+        syncVideoWithServer(res.data)
+        seekVideo(res.data.time)
         return
       }
 
       case "PLAY_VIDEO": {
         if (!res.data) return
 
-        syncVideo(res.data)
+        syncVideoWithServer(res.data)
+        seekVideo(res.data.time)
         return
       }
 
       case "PAUSE_VIDEO": {
         if (!res.data) return
 
-        setVideoData({
-          url: res.data.url,
-          time: res.data.time,
-          playing: res.data.playing,
-        })
-    
+        syncVideoWithServer(res.data)
         return
       }
 
@@ -84,28 +83,28 @@ const Room: React.FC<Props> = () => {
     })
   }
 
-  const syncVideo = (newVideoData: VideoData) => {
+  const syncVideoWithServer = (newVideoData: VideoData) => {
     setVideoData({
       url: newVideoData.url,
       time: newVideoData.time,
       playing: newVideoData.playing,
     })
-
-    if (playerRef.current) {
-      setIsSeeking(true)
-      playerRef.current.seekTo(newVideoData.time, 'seconds')
-    }
   }
 
-  const handlePlay = () => {
-    console.log("PLAYING...")
-    if (!playerRef.current) {
-      console.log("No REF to media player found")
+  const seekVideo = (durationTime: number) => {
+    if (durationTime > 0 && playerRef?.current) {
+      setIsSeeking(true)
+      playerRef.current.seekTo(durationTime, 'seconds')
       return
     }
 
+    console.warn("Failed to seek", videoData)
+  }
+
+  const handlePlay = () => {
+    if (!playerRef?.current) return
+
     if (!isSeeking) {
-      console.log("SENDING PLAY!!")
       sendMessage({
         action: "PLAY_VIDEO",
         data: {
@@ -116,19 +115,13 @@ const Room: React.FC<Props> = () => {
       })
     }
 
-    console.log(playerRef.current.getCurrentTime())
-
     setIsSeeking(false)
   }
 
   const handlePause = () => {
-    if (!playerRef.current) {
-      console.log("No REF to media player found")
-      return
-    }
+    if (!playerRef?.current) return
 
     if (!isSeeking) {
-      console.log("SENDING PAUSE!!")
       sendMessage({
         action: "PAUSE_VIDEO",
         data: {
@@ -138,13 +131,10 @@ const Room: React.FC<Props> = () => {
       })
     }
 
-    console.log(playerRef.current.getCurrentTime())
-
     setIsSeeking(false)
   }
 
   const handleSeek = () => {
-    console.log("SEEKING")
     sendMessage({
       action: "PLAY_VIDEO",
       data: {
@@ -159,6 +149,7 @@ const Room: React.FC<Props> = () => {
     setMediaReady(true)
   }
 
+  
   return (
     <div>
       <input value={videoUrl} onChange={({ target: { value } }) => setVideo(value)} />
