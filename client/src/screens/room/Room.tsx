@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useRef, useCallback } from 'react'
 import { useParams } from 'react-router'
 import ReactPlayer from 'react-player'
 
-import useWebsocket from '../../hooks/useWebsocket'
+import useWebsocket, { ActionType } from '../../hooks/useWebsocket'
 import { RoomProps as Props, VideoData } from './types'
 
 
@@ -21,24 +21,39 @@ const Room: React.FC<Props> = () => {
   const { roomID } = useParams()
 
 
-  const messageListener = (ev: MessageEvent) => {
+  const seekVideo = (durationTime: number) => {
+    if (durationTime > 0 && playerRef?.current) {
+      setIsSeeking(true)
+      playerRef.current.seekTo(durationTime, 'seconds')
+      return
+    }
+
+    console.warn("Failed to seek", videoData)
+  }
+
+
+  const messageListener = useCallback((ev: MessageEvent) => {
     const res = JSON.parse(ev.data)
     console.log(JSON.parse(ev.data))
 
-    if (!res || !res.action) {
+    const action: ActionType = res.action
+
+    if (!res || !action) {
       console.warn("No action to handle")
       return
     }
 
-    switch (res.action) {
-      case "REQUEST": {
-        if (!res.data) return
+    switch (action) {
+      case ActionType.REQUEST: {
+        console.log(videoData.url)
+
+        if (!res.data && videoData.url) return
 
         syncVideoWithServer(res.data)
         return
       }
 
-      case "SYNC": {
+      case ActionType.SYNC: {
         if (!res.data || !res.data.url) return
 
         syncVideoWithServer(res.data)
@@ -46,7 +61,7 @@ const Room: React.FC<Props> = () => {
         return
       }
 
-      case "PLAY_VIDEO": {
+      case ActionType.PLAY_VIDEO: {
         if (!res.data) return
 
         syncVideoWithServer(res.data)
@@ -54,7 +69,7 @@ const Room: React.FC<Props> = () => {
         return
       }
 
-      case "PAUSE_VIDEO": {
+      case ActionType.PAUSE_VIDEO: {
         if (!res.data) return
 
         syncVideoWithServer(res.data)
@@ -63,23 +78,17 @@ const Room: React.FC<Props> = () => {
 
       default: console.log("Nothing", res.data)
     }
-  }
+  }, [seekVideo, videoData.url])
 
   const { sendMessage } = useWebsocket(`ws://localhost:7777/ws/${roomID}`, messageListener)
 
 
   const handleRequestVideo = () => {
     sendMessage({
-      action: "REQUEST",
+      action: ActionType.REQUEST,
       data: {
         url: videoUrl,
       }
-    })
-
-    setVideoData({
-      url: videoUrl,
-      time: 0,
-      playing: false,
     })
   }
 
@@ -91,22 +100,12 @@ const Room: React.FC<Props> = () => {
     })
   }
 
-  const seekVideo = (durationTime: number) => {
-    if (durationTime > 0 && playerRef?.current) {
-      setIsSeeking(true)
-      playerRef.current.seekTo(durationTime, 'seconds')
-      return
-    }
-
-    console.warn("Failed to seek", videoData)
-  }
-
   const handlePlay = () => {
     if (!playerRef?.current) return
 
     if (!isSeeking) {
       sendMessage({
-        action: "PLAY_VIDEO",
+        action: ActionType.PLAY_VIDEO,
         data: {
           time: playerRef.current.getCurrentTime(),
           url: videoData.url,
@@ -123,10 +122,11 @@ const Room: React.FC<Props> = () => {
 
     if (!isSeeking) {
       sendMessage({
-        action: "PAUSE_VIDEO",
+        action: ActionType.PAUSE_VIDEO,
         data: {
           time: playerRef.current.getCurrentTime(),
           url: videoData.url,
+          playing: false,
         }
       })
     }
@@ -136,20 +136,20 @@ const Room: React.FC<Props> = () => {
 
   const handleSeek = () => {
     sendMessage({
-      action: "PLAY_VIDEO",
+      action: ActionType.PLAY_VIDEO,
       data: {
-        time: playerRef?.current?.getCurrentTime(),
+        time: playerRef?.current?.getCurrentTime() || 0,
         url: videoData.url,
         playing: true,
       }
     })
   }
 
-  const handleMediaReady = (player: ReactPlayer) => {
+  const handleMediaReady = (_player: ReactPlayer) => {
     setMediaReady(true)
   }
 
-  
+
   return (
     <div>
       <input value={videoUrl} onChange={({ target: { value } }) => setVideo(value)} />

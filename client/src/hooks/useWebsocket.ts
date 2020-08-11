@@ -1,4 +1,18 @@
 import { useState, useEffect, useCallback } from "react"
+import { VideoData } from "../screens/room/types"
+
+
+export enum ActionType {
+  PLAY_VIDEO = "PLAY_VIDEO",
+  PAUSE_VIDEO = "PAUSE_VIDEO",
+  SYNC = "SYNC",
+  REQUEST = "REQUEST",
+}
+
+export type Message = {
+  action: ActionType,
+  data: VideoData,
+}
 
 /** WebSocket wrapper */
 const useWebsocket = (
@@ -60,7 +74,7 @@ const useWebsocket = (
   }, [connect])
 
 
-  function sendMessage(message: any) {
+  function sendMessage(message: Message) {
     if (!ws) {
       console.warn("No web streaming")
       return

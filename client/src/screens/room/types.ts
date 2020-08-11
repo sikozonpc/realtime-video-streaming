@@ -8,7 +8,7 @@ export interface RoomProps {
 }
 
 export interface VideoData {
-  url: string,
-  time: number,
-  playing: boolean,
+  url?: string,
+  time?: number,
+  playing?: boolean,
 }

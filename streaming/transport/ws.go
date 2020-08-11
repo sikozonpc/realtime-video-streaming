@@ -56,7 +56,7 @@ func (h *WS) handleRoomConn(w http.ResponseWriter, r *http.Request) {
 	hub.Instance.Register <- sub
 
 	// Sync to current room
-	sub.SyncToRoom(roomID)
+	sub.SyncToRoom()
 
 	go sub.Write()
 	go sub.Read()

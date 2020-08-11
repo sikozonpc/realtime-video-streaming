@@ -17,6 +17,16 @@ const (
 	pingPeriod = (pongWait * 9) / 10
 )
 
+type actionType string
+
+const (
+	REQUEST     actionType = "REQUEST"
+	PLAY_VIDEO  actionType = "PLAY_VIDEO"
+	PAUSE_VIDEO actionType = "PAUSE_VIDEO"
+	END_VIDEO   actionType = "END_VIDEO"
+	SYNC        actionType = "SYNC"
+)
+
 type Message struct {
 	Data []byte
 	Room string
@@ -62,39 +72,21 @@ func (s Subscription) Read() {
 			break
 		}
 
-		var objmap map[string]json.RawMessage
-		err = json.Unmarshal(msg, &objmap)
-		if err != nil {
-			log.Fatalln(err.Error())
-		}
-
-		var action string
-		err = json.Unmarshal(objmap["action"], &action)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		var data VideoData
-		if objmap["data"] != nil {
-			err = json.Unmarshal(objmap["data"], &data)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
+		action, data := unmarshalSocketMessage(msg)
 
 		log.Println(data)
 
 		switch action {
-		case "REQUEST":
-			if Instance.RoomsPlaylist[s.Room] != nil {
-				Instance.RoomsPlaylist[s.Room] = append(Instance.RoomsPlaylist[s.Room], VideoData{
-					Time:    0,
-					Playing: false,
-					Url:     data.Url,
-				})
-			}
+		case REQUEST:
+			Instance.RoomsPlaylist[s.Room] = append(Instance.RoomsPlaylist[s.Room], VideoData{
+				Time:    0,
+				Playing: false,
+				Url:     data.Url,
+			})
 
-		case "PLAY_VIDEO":
+			log.Println("ARR: ", Instance.RoomsPlaylist[s.Room])
+
+		case PLAY_VIDEO:
 			if len(Instance.RoomsPlaylist[s.Room]) > 0 {
 				Instance.RoomsPlaylist[s.Room][0] = VideoData{
 					Time:    data.Time,
@@ -113,7 +105,7 @@ func (s Subscription) Read() {
 				Instance.Broadcast <- m
 			}
 
-		case "PAUSE_VIDEO":
+		case PAUSE_VIDEO:
 			if len(Instance.RoomsPlaylist[s.Room]) > 0 {
 				Instance.RoomsPlaylist[s.Room][0] = VideoData{
 					Time:    data.Time,
@@ -131,9 +123,11 @@ func (s Subscription) Read() {
 				m := Message{jsData, s.Room}
 				Instance.Broadcast <- m
 			}
+		case SYNC:
+			s.SyncToRoom()
 
 		default:
-			log.Printf("No valid action sent from Client, ACTION: %s \n", action)
+			log.Printf("No valid action sent from Client, ACTION: %v \n", action)
 		}
 
 		if len(Instance.RoomsPlaylist[s.Room]) > 0 {
@@ -143,6 +137,31 @@ func (s Subscription) Read() {
 		m := Message{msg, s.Room}
 		Instance.Broadcast <- m
 	}
+}
+
+// Unpacks the marsheled json data by the socket message
+func unmarshalSocketMessage(msg []byte) (actionType, VideoData) {
+	var objmap map[string]json.RawMessage
+	err := json.Unmarshal(msg, &objmap)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	var action actionType
+	err = json.Unmarshal(objmap["action"], &action)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var data VideoData
+	if objmap["data"] != nil {
+		err = json.Unmarshal(objmap["data"], &data)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	return action, data
 }
 
 // Write writes messages from the hub to the streaming connection
@@ -174,15 +193,17 @@ func (s Subscription) Write() {
 }
 
 // SyncToRoom sends current media playing data to connection
-func (s Subscription) SyncToRoom(roomID string) {
-	if len(Instance.RoomsPlaylist[roomID]) <= 0 {
-		return
-	}
+func (s Subscription) SyncToRoom() {
+	if len(Instance.RoomsPlaylist[s.Room]) > 0 {
 
-	msg := SocketMessage{
-		Action: "SYNC",
-		Data:   Instance.RoomsPlaylist[roomID][0],
+		msg := SocketMessage{
+			Action: "SYNC",
+			Data:   Instance.RoomsPlaylist[s.Room][0],
+		}
+
+		log.Printf("Syncing... MSG: %v", msg)
+
+		s.Conn.Conn.WriteJSON(msg)
+
 	}
-	log.Println(msg)
-	s.Conn.Conn.WriteJSON(msg)
 }
