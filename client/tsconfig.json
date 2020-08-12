@@ -19,7 +19,6 @@
     "esModuleInterop": true,
     "jsx": "react",
     "moduleResolution": "node",
-
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
     "baseUrl": "src",
@@ -28,7 +27,4 @@
   "include": [
     "src"
   ],
-  "typeAcquisition": {
-    "include": ["jest"]
-  }
 }

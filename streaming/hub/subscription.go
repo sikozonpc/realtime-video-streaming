@@ -76,9 +76,11 @@ func (s Subscription) Read() {
 
 		log.Println(data)
 
+		itemsInPlaylist := len(Instance.RoomsPlaylist[s.Room]) > 0
+
 		switch action {
 		case REQUEST:
-			Instance.RoomsPlaylist[s.Room] = append(Instance.RoomsPlaylist[s.Room], VideoData{
+			Instance.RoomsPlaylist[s.Room] = Instance.RoomsPlaylist[s.Room].Enqueue(VideoData{
 				Time:    0,
 				Playing: false,
 				Url:     data.Url,
@@ -86,8 +88,25 @@ func (s Subscription) Read() {
 
 			log.Println("ARR: ", Instance.RoomsPlaylist[s.Room])
 
+		case END_VIDEO:
+			if itemsInPlaylist {
+				Instance.RoomsPlaylist[s.Room] = Instance.RoomsPlaylist[s.Room].Unqueue()
+				log.Println("NEW ARR: ", Instance.RoomsPlaylist[s.Room])
+
+				//TODO: Abtract this method
+				res := SocketMessage{
+					Action: "PLAY_VIDEO",
+					Data:   Instance.RoomsPlaylist[s.Room][0],
+				}
+
+				jsData, _ := json.Marshal(res)
+
+				m := Message{jsData, s.Room}
+				Instance.Broadcast <- m
+
+			}
 		case PLAY_VIDEO:
-			if len(Instance.RoomsPlaylist[s.Room]) > 0 {
+			if itemsInPlaylist {
 				Instance.RoomsPlaylist[s.Room][0] = VideoData{
 					Time:    data.Time,
 					Url:     Instance.RoomsPlaylist[s.Room][0].Url,
@@ -104,9 +123,8 @@ func (s Subscription) Read() {
 				m := Message{jsData, s.Room}
 				Instance.Broadcast <- m
 			}
-
 		case PAUSE_VIDEO:
-			if len(Instance.RoomsPlaylist[s.Room]) > 0 {
+			if itemsInPlaylist {
 				Instance.RoomsPlaylist[s.Room][0] = VideoData{
 					Time:    data.Time,
 					Url:     Instance.RoomsPlaylist[s.Room][0].Url,
@@ -130,9 +148,11 @@ func (s Subscription) Read() {
 			log.Printf("No valid action sent from Client, ACTION: %v \n", action)
 		}
 
-		if len(Instance.RoomsPlaylist[s.Room]) > 0 {
+		if itemsInPlaylist {
 			log.Printf("CUUR PLAYING %s \n", Instance.RoomsPlaylist[s.Room][0].Url)
 		}
+
+		//TODO: THIS CANNOT BE ALWAYS CALLED
 
 		m := Message{msg, s.Room}
 		Instance.Broadcast <- m

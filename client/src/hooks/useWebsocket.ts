@@ -5,6 +5,7 @@ import { VideoData } from "../screens/room/types"
 export enum ActionType {
   PLAY_VIDEO = "PLAY_VIDEO",
   PAUSE_VIDEO = "PAUSE_VIDEO",
+  END_VIDEO = "END_VIDEO",
   SYNC = "SYNC",
   REQUEST = "REQUEST",
 }
@@ -34,12 +35,12 @@ const useWebsocket = (
 
       setWebsocket(ws)
 
-      timeout = 250 // reset timer to 250 on open of websocket connection 
+      timeout = 250 // reset timer to 250 on open of websocket connection
       clearTimeout(connectInterval) // clear Interval on on open of websocket connection
     }
 
     // websocket onclose event listener
-    ws.onclose = e => {
+    ws.onclose = (e: any) => {
       console.log(
         `Socket is closed. Reconnect will be attempted in ${Math.min(
           10000 / 1000,
@@ -66,7 +67,7 @@ const useWebsocket = (
     ws.onmessage = (ev: MessageEvent) => {
       messageListener(ev)
     }
-  }, [])
+  }, [url])
 
   useEffect(() => {
     // single websocket instance for the own application and constantly trying to reconnect.
