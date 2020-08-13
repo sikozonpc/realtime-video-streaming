@@ -93,10 +93,24 @@ func (s Subscription) Read() {
 				Instance.RoomsPlaylist[s.Room] = Instance.RoomsPlaylist[s.Room].Unqueue()
 				log.Println("NEW ARR: ", Instance.RoomsPlaylist[s.Room])
 
+				if len(Instance.RoomsPlaylist[s.Room]) > 0 {
+					//TODO: Abtract this method
+					res := SocketMessage{
+						Action: "PLAY_VIDEO",
+						Data:   Instance.RoomsPlaylist[s.Room].GetNext(),
+					}
+
+					jsData, _ := json.Marshal(res)
+
+					m := Message{jsData, s.Room}
+					Instance.Broadcast <- m
+
+				}
+
 				//TODO: Abtract this method
 				res := SocketMessage{
 					Action: "PLAY_VIDEO",
-					Data:   Instance.RoomsPlaylist[s.Room][0],
+					Data:   Instance.RoomsPlaylist[s.Room].GetNext(),
 				}
 
 				jsData, _ := json.Marshal(res)
@@ -107,15 +121,16 @@ func (s Subscription) Read() {
 			}
 		case PLAY_VIDEO:
 			if itemsInPlaylist {
-				Instance.RoomsPlaylist[s.Room][0] = VideoData{
-					Time:    data.Time,
-					Url:     Instance.RoomsPlaylist[s.Room][0].Url,
-					Playing: true,
-				}
+				Instance.RoomsPlaylist[s.Room].UpdateCurrent(
+					VideoData{
+						Time:    data.Time,
+						Url:     Instance.RoomsPlaylist[s.Room].GetNext().Url,
+						Playing: true,
+					})
 
 				res := SocketMessage{
 					Action: "PLAY_VIDEO",
-					Data:   Instance.RoomsPlaylist[s.Room][0],
+					Data:   Instance.RoomsPlaylist[s.Room].GetNext(),
 				}
 
 				jsData, _ := json.Marshal(res)
@@ -125,15 +140,16 @@ func (s Subscription) Read() {
 			}
 		case PAUSE_VIDEO:
 			if itemsInPlaylist {
-				Instance.RoomsPlaylist[s.Room][0] = VideoData{
-					Time:    data.Time,
-					Url:     Instance.RoomsPlaylist[s.Room][0].Url,
-					Playing: false,
-				}
+				Instance.RoomsPlaylist[s.Room].UpdateCurrent(
+					VideoData{
+						Time:    data.Time,
+						Url:     Instance.RoomsPlaylist[s.Room].GetNext().Url,
+						Playing: false,
+					})
 
 				res := SocketMessage{
 					Action: "PAUSE_VIDEO",
-					Data:   Instance.RoomsPlaylist[s.Room][0],
+					Data:   Instance.RoomsPlaylist[s.Room].GetNext(),
 				}
 
 				jsData, _ := json.Marshal(res)
@@ -149,10 +165,8 @@ func (s Subscription) Read() {
 		}
 
 		if itemsInPlaylist {
-			log.Printf("CUUR PLAYING %s \n", Instance.RoomsPlaylist[s.Room][0].Url)
+			log.Printf("CUUR PLAYING %s \n", Instance.RoomsPlaylist[s.Room].GetNext().Url)
 		}
-
-		//TODO: THIS CANNOT BE ALWAYS CALLED
 
 		m := Message{msg, s.Room}
 		Instance.Broadcast <- m
@@ -218,7 +232,7 @@ func (s Subscription) SyncToRoom() {
 
 		msg := SocketMessage{
 			Action: "SYNC",
-			Data:   Instance.RoomsPlaylist[s.Room][0],
+			Data:   Instance.RoomsPlaylist[s.Room].GetNext(),
 		}
 
 		log.Printf("Syncing... MSG: %v", msg)

@@ -11,3 +11,18 @@ func (p Playlist) Unqueue() Playlist {
 func (p Playlist) Enqueue(video VideoData) Playlist {
 	return append(p, video)
 }
+
+// GetNext returns the next video in the queue
+func (p Playlist) GetNext() VideoData {
+	if len(p) <= 0 {
+		return VideoData{}
+	}
+	return p[0]
+}
+
+// UpdateCurrent updates the current video playing
+func (p Playlist) UpdateCurrent(u VideoData) {
+	if len(p) > 0 {
+		p[0] = u
+	}
+}
