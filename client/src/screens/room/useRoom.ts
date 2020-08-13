@@ -54,7 +54,7 @@ export const useRoom = () => {
 
         if (!res.data) return
 
-        const isRequestingNewVideo = stateRef.current?.url != res.data.url
+        const isRequestingNewVideo = stateRef.current?.url !== res.data.url
         if (isRequestingNewVideo) return
 
         syncVideoWithServer(res.data)

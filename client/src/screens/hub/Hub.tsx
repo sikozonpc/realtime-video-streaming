@@ -1,6 +1,7 @@
 import React from 'react'
 import axios from 'axios'
 import { useHistory } from 'react-router'
+import c from './Hub.module.scss'
 
 const Hub: React.FC = () => {
   const history = useHistory()
@@ -14,8 +15,8 @@ const Hub: React.FC = () => {
   }
 
   return (
-    <div className="App">
-      <button onClick={handleCreateRoom}>Create room</button>
+    <div className={c.Root}>
+      <button onClick={handleCreateRoom}>CREATE ROOM</button>
     </div>
   )
 }

@@ -1,0 +1,24 @@
+.Root {
+  height: 100vh;
+  width: 100vw;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.81) 43.75%, rgba(5, 5, 5, 0.6885) 100%);  
+
+  button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    padding: 15px 25px;
+    border: none;
+    border-radius: 4px;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 26px;
+    line-height: 30px;
+    color: #FFFFFF;
+    background-color: #238A65;
+    cursor: pointer;
+
+  }
+}
