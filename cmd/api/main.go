@@ -1,8 +1,6 @@
 package api
 
 import (
-	"goproject/auth"
-	authTransport "goproject/auth/transport"
 	"goproject/httpserver"
 	"goproject/streaming"
 	"goproject/streaming/hub"
@@ -21,7 +19,6 @@ func Run() {
 
 	defer s.DB.Close()
 
-	authTransport.NewHTTP(auth.Initialize(s.DB), s.Router)
 	streamingTransport.NewWS(streaming.Initialize(s.DB), s.Router)
 
 	s.Run()

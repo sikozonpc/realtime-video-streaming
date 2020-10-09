@@ -20,8 +20,12 @@
     "react-scripts": "3.4.1",
     "typescript": "~3.7.2"
   },
+  "devDependencies": {
+    "eslint-plugin-react-hooks": "^4.0.8",
+    "serve": "11.3.0"
+  },
   "scripts": {
-    "start": "PORT=3001 react-scripts start",
+    "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
@@ -41,8 +45,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "eslint-plugin-react-hooks": "^4.0.8"
   }
 }

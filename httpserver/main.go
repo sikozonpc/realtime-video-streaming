@@ -3,14 +3,14 @@ package httpserver
 import (
 	"database/sql"
 	"fmt"
-	"github.com/gorilla/mux"
 	"goproject/env"
-	"goproject/postgresdb"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/gorilla/mux"
 
 	"github.com/rs/cors"
 )
@@ -26,24 +26,14 @@ type Server struct {
 
 // New creates a new http server instance
 func New() (*Server, error) {
-	// Open connection to database...
-	db, err := postgresdb.New(envVars)
-	if err != nil {
-		return nil, err
-	}
-
 	r := mux.NewRouter()
 	s := &Server{
 		Router: r,
-		DB:     db,
 	}
 
 	// Run migrations...
 
 	s.Router.HandleFunc("/health", handleHealthCheck)
-
-	fs := http.FileServer(http.Dir("static/"))
-	s.Router.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	return s, nil
 }
@@ -58,17 +48,17 @@ func (s *Server) Run() {
 
 	signal.Notify(stop, os.Interrupt)
 
-	serverAddr := fmt.Sprintf("%s:%s", envVars.Address, envVars.Port)
+	//serverAddr := fmt.Sprintf("%s:%s", envVars.Address, envVars.Port)
 
 	h := &http.Server{
-		Addr:         serverAddr,
+		Addr:         ":8080",
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 5 * time.Second,
-		Handler:       cors.Default().Handler(s),
+		Handler:      cors.Default().Handler(s),
 	}
 
 	go func() {
-		log.Printf("Listening on %s\n", serverAddr)
+		log.Printf("Listening on %s\n", ":8080")
 
 		if err := h.ListenAndServe(); err != nil {
 			log.Fatal(err)
