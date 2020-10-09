@@ -8,7 +8,7 @@ const Hub: React.FC = () => {
 
   const handleCreateRoom = () => {
     // Generate in API a random room that doesnt exist
-    axios.get("http://localhost:7777/room")
+    axios.get("http://localhost:8080/room")
       .then(d => {
         history.push(`/room/${d.data.ID}`)
       })

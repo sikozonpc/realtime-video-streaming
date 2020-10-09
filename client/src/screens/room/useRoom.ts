@@ -92,7 +92,7 @@ export const useRoom = () => {
     }
   }
 
-  const { sendMessage } = useWebsocket(`ws://localhost:7777/ws/${roomID}`, messageListener)
+  const { sendMessage } = useWebsocket(`ws://localhost:8080/ws/${roomID}`, messageListener)
 
 
   const handleRequestVideo = () => {

@@ -1,4 +1,4 @@
-.PHONY: run-api, run-client
+.PHONY: run-api run-client
 
 PORT := 7777
 ADDR := "localhost"
