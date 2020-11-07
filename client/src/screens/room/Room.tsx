@@ -1,13 +1,14 @@
 import React from 'react'
 import ReactPlayer from 'react-player'
 import { RoomProps as Props } from './types'
-import { useRoom } from './useRoom'
+import { useRoom } from '../../hooks/useRoom'
 import c from "./Room.module.scss"
+import Playlist from 'components/Playlist'
 
 
 const Room: React.FC<Props> = () => {
   const {
-    isMediaReady, playerRef, videoUrl, videoData,
+    isMediaReady, playerRef, videoUrl, videoData, playlist,
     handleMediaReady, handlePause, handlePlay, handleSeek, handleRequestVideo, setVideo, handleMediaEnd,
   } = useRoom()
 
@@ -16,12 +17,13 @@ const Room: React.FC<Props> = () => {
       <div className={c.PlaylistContainer}>
         <div className={c.VideoInput}>
           <input value={videoUrl} onChange={({ target: { value } }) => setVideo(value)} />
-          <button onClick={handleRequestVideo}>REQUEST TO PLAYLIST</button>
+          <button onClick={handleRequestVideo}>Add to playlist</button>
         </div>
 
-        <ul className={c.List}>
-          <li>Requesting playlist...</li>
-        </ul>
+        <Playlist
+          className={c.List}
+          videosUrls={playlist}
+        />
       </div>
 
       <div className={c.VideoContainer}>

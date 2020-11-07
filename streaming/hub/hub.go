@@ -83,10 +83,7 @@ func (h *Hub) Run() {
 // CheckRoomAvailability checks if a room exists
 func CheckRoomAvailability(id string) bool {
 	connections := Instance.Rooms[id]
-	if connections == nil {
-		return true
-	}
-	return false
+	return len(connections) > 0
 }
 
 func (h *Hub) deleteRoom(s Subscription) {

@@ -31,8 +31,6 @@ func New() (*Server, error) {
 		Router: r,
 	}
 
-	// Run migrations...
-
 	s.Router.HandleFunc("/health", handleHealthCheck)
 
 	return s, nil

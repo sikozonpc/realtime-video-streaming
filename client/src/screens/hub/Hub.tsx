@@ -2,13 +2,13 @@ import React from 'react'
 import axios from 'axios'
 import { useHistory } from 'react-router'
 import c from './Hub.module.scss'
+import { API_URL } from 'config'
 
 const Hub: React.FC = () => {
   const history = useHistory()
 
   const handleCreateRoom = () => {
-    // Generate in API a random room that doesnt exist
-    axios.get("http://localhost:8080/room")
+    axios.get(`${API_URL}/room`)
       .then(d => {
         history.push(`/room/${d.data.ID}`)
       })

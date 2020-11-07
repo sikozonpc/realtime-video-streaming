@@ -1,6 +1,6 @@
 .PHONY: run-api run-client
 
-PORT := 7777
+PORT := 8080
 ADDR := "localhost"
 
 run-api:

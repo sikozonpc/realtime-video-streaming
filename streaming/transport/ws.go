@@ -30,15 +30,16 @@ func NewWS(svc streaming.Service, r *mux.Router) {
 	h := WS{svc}
 
 	r.HandleFunc("/ws/{roomID}", h.handleRoomConn).Methods("GET")
-	r.HandleFunc("/room", h.handleValidateRoom).Methods("GET")
+	r.HandleFunc("/room", h.handleCreateRoom).Methods("GET")
+	r.HandleFunc("/room/{roomID}/playlist", h.handleGetRoomPlaylist).Methods("GET")
 }
 
 func (h *WS) handleRoomConn(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	roomID := vars["roomID"]
+	params := mux.Vars(r)
+	roomID := params["roomID"]
 
 	if len(roomID) == 0 {
-		fmt.Println("No room ID")
+		responses.ERROR(w, http.StatusBadRequest, fmt.Errorf("missing roomID param"))
 		return
 	}
 
@@ -62,18 +63,45 @@ func (h *WS) handleRoomConn(w http.ResponseWriter, r *http.Request) {
 	go sub.Read()
 }
 
-func (h *WS) handleValidateRoom(w http.ResponseWriter, r *http.Request) {
+func (h *WS) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.NewUUID()
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	rd := h.svc.ValidateRoom(id.String())
-
-	if rd.ID != "" {
-		responses.JSON(w, http.StatusOK, rd)
+	rd, err := h.svc.CreateRoom(id.String())
+	if err != nil {
+		responses.ERROR(w, http.StatusConflict, err)
 		return
 	}
-	responses.JSON(w, http.StatusConflict, rd)
+
+	log.Println((rd))
+
+	if rd.ID == "" {
+		responses.JSON(w, http.StatusConflict, rd)
+		return
+	}
+
+	responses.JSON(w, http.StatusOK, rd)
+}
+
+func (h *WS) handleGetRoomPlaylist(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	roomID := params["roomID"]
+
+	if len(roomID) == 0 {
+		responses.ERROR(w, http.StatusBadRequest, fmt.Errorf("missing roomID param"))
+		return
+	}
+
+	roomExists := hub.CheckRoomAvailability(roomID)
+	if !roomExists {
+		responses.ERROR(w, http.StatusBadRequest, fmt.Errorf("room does not exist"))
+		return
+	}
+
+	playlist := h.svc.GetRoomPlaylist(roomID)
+
+	responses.JSON(w, http.StatusOK, playlist)
 }

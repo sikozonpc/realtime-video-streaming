@@ -1,6 +1,7 @@
 package streaming
 
 import (
+	"fmt"
 	"goproject/streaming/hub"
 	"log"
 )
@@ -10,11 +11,22 @@ func (s Socket) ServeRoom(id string) {
 	log.Print("SERVING ROOM")
 }
 
-func (s Socket) ValidateRoom(id string) RoomData {
-	v := hub.CheckRoomAvailability(id)
-	if v == true {
-		return RoomData{ID: id}
+func (s Socket) CreateRoom(id string) (*RoomData, error) {
+	roomExists := hub.CheckRoomAvailability(id)
+	if roomExists {
+		return nil, fmt.Errorf("room already exists")
 	}
-	return RoomData{ID: ""}
+
+	return &RoomData{ID: id}, nil
 }
 
+func (s Socket) GetRoomPlaylist(roomID string) []string {
+	roomPlaylist := hub.Instance.RoomsPlaylist[roomID]
+	var playlist []string
+
+	for _, video := range roomPlaylist {
+		playlist = append(playlist, video.Url)
+	}
+
+	return playlist
+}

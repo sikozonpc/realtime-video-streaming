@@ -1,7 +1,7 @@
 .Root {
   display: flex;
   flex-flow: row;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.81) 43.75%, rgba(5, 5, 5, 0.6885) 100%);  
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.81) 43.75%, rgba(5, 5, 5, 0.6885) 100%);
 
   .VideoContainer {
     width: 80%;
@@ -10,6 +10,7 @@
 
   .PlaylistContainer {
     width: 20%;
+    min-width: 250px;
     box-sizing: border-box;
     padding: 15px;
     color: #FFFFFF;

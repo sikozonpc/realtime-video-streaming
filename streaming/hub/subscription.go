@@ -80,6 +80,7 @@ func (s Subscription) Read() {
 
 		switch action {
 		case REQUEST:
+			// TODO: Proper validate if it's a valid youtube video
 			Instance.RoomsPlaylist[s.Room] = Instance.RoomsPlaylist[s.Room].Enqueue(VideoData{
 				Time:    0,
 				Playing: false,
