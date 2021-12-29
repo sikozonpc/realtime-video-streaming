@@ -3,11 +3,11 @@ package httpserver
 import (
 	"database/sql"
 	"fmt"
-	"streamserver/env"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"streamserver/env"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -45,8 +45,6 @@ func (s *Server) Run() {
 	stop := make(chan os.Signal, 1)
 
 	signal.Notify(stop, os.Interrupt)
-
-	//serverAddr := fmt.Sprintf("%s:%s", envVars.Address, envVars.Port)
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
