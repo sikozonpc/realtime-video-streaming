@@ -3,13 +3,7 @@ package streaming
 import (
 	"fmt"
 	"streamserver/streaming/hub"
-	"log"
 )
-
-// ServeRoom implements the logic to serve a room
-func (s Socket) ServeRoom(id string) {
-	log.Print("SERVING ROOM")
-}
 
 func (s Socket) CreateRoom(id string) (*RoomData, error) {
 	roomExists := hub.CheckRoomAvailability(id)

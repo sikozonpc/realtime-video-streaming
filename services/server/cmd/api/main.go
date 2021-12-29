@@ -1,11 +1,11 @@
 package api
 
 import (
+	"log"
 	"streamserver/httpserver"
 	"streamserver/streaming"
 	"streamserver/streaming/hub"
 	streamingTransport "streamserver/streaming/transport"
-	"log"
 )
 
 // Run the http server
@@ -17,9 +17,8 @@ func Run() {
 		log.Fatal(err.Error())
 	}
 
-	defer s.DB.Close()
-
-	streamingTransport.NewWS(streaming.Initialize(s.DB), s.Router)
+	streamingTransport.NewHTTP(streaming.Initialize(), s.Router)
+	streamingTransport.NewWS(streaming.Initialize(), s.Router)
 
 	s.Run()
 }

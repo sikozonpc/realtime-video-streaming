@@ -64,6 +64,7 @@ func (h *Hub) Run() {
 			}
 		case m := <-h.Broadcast:
 			connections := h.Rooms[m.Room]
+			
 			for c := range connections {
 				select {
 				case c.Send <- m.Data:

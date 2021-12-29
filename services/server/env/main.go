@@ -5,7 +5,6 @@ import (
 	"os"
 )
 
-// Variables for the env file
 type Variables struct {
 	Port    string
 	Address string
@@ -14,8 +13,8 @@ type Variables struct {
 // ParseEnv parses the environment variables to run the API
 func ParseEnv() Variables {
 	var (
-		port = flag.String("port", os.Getenv("PORT"), "The http server port")
-		addr = flag.String("addr", os.Getenv("ADDR"), "The http server address")
+		port = flag.String("port", os.Getenv("PORT"), "The HTTP server port")
+		addr = flag.String("addr", os.Getenv("ADDR"), "The HTTP server address")
 	)
 
 	flag.Parse()

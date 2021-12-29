@@ -1,7 +1,6 @@
 package httpserver
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -19,7 +18,6 @@ var envVars = env.ParseEnv()
 
 // Server struct
 type Server struct {
-	DB     *sql.DB
 	Router *mux.Router
 	// Logger *provider.Logger
 }
@@ -47,8 +45,8 @@ func (s *Server) Run() {
 	signal.Notify(stop, os.Interrupt)
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"GET", "HEAD", "POST", "PUT", "OPTIONS"},
+		AllowedOrigins: []string{"*"}, // TODO: Correctly setup CORS
+		AllowedMethods: []string{"GET", "HEAD", "POST", "PUT", "OPTIONS"},
 	})
 
 	port := ":" + envVars.Port

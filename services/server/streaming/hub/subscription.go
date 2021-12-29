@@ -169,8 +169,8 @@ func (s Subscription) Read() {
 			log.Printf("CURRENTLY PLAYING %s \n", Instance.RoomsPlaylist[s.Room].GetNext().Url)
 		}
 
-		m := Message{msg, s.Room}
-		Instance.Broadcast <- m
+		// m := Message{msg, s.Room}
+		//Instance.Broadcast <- m
 	}
 }
 
