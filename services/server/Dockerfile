@@ -1,9 +1,9 @@
 FROM golang:1.17-alpine
 
-ADD . /go/src/goproject
-WORKDIR /go/src/goproject
+ADD . /go/src/streamserver
+WORKDIR /go/src/streamserver
 
-RUN go get goproject
+RUN go get streamserver
 RUN go install
 
-ENTRYPOINT ["/go/bin/goproject -port=8080 -addr=0.0.0.0"]
+ENTRYPOINT ["/go/bin/streamserver -port=8080 -addr=0.0.0.0"]

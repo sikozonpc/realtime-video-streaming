@@ -1,4 +1,4 @@
-module goproject
+module streamserver
 
 go 1.17
 

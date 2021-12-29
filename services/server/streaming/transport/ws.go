@@ -2,9 +2,9 @@ package transport
 
 import (
 	"fmt"
-	"goproject/responses"
-	"goproject/streaming"
-	"goproject/streaming/hub"
+	"streamserver/responses"
+	"streamserver/streaming"
+	"streamserver/streaming/hub"
 	"log"
 	"net/http"
 

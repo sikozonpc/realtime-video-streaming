@@ -2,7 +2,7 @@ package streaming
 
 import (
 	"fmt"
-	"goproject/streaming/hub"
+	"streamserver/streaming/hub"
 	"log"
 )
 

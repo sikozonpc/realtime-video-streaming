@@ -1,6 +1,6 @@
 package main
 
-import "goproject/cmd/api"
+import "streamserver/cmd/api"
 
 func main() {
 	api.Run()

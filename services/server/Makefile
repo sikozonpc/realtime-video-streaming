@@ -4,4 +4,4 @@ PORT := 8080
 ADDR := "localhost"
 
 run-api:
-	go build -o goproject && ./goproject -port=${PORT} -addr=${ADDR}
+	go build -o streamserver && ./streamserver -port=${PORT} -addr=${ADDR}

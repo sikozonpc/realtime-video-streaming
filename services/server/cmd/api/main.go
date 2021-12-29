@@ -1,10 +1,10 @@
 package api
 
 import (
-	"goproject/httpserver"
-	"goproject/streaming"
-	"goproject/streaming/hub"
-	streamingTransport "goproject/streaming/transport"
+	"streamserver/httpserver"
+	"streamserver/streaming"
+	"streamserver/streaming/hub"
+	streamingTransport "streamserver/streaming/transport"
 	"log"
 )
 
