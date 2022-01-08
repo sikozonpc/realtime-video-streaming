@@ -44,6 +44,11 @@ type SocketMessage struct {
 	Data   VideoData `json:"data"`
 }
 
+type RequestSocketMessage struct {
+	Action string   `json:"action"`
+	Data   Playlist `json:"data"`
+}
+
 type VideoData struct {
 	Url     string  `json:"url"`
 	Time    float32 `json:"time"`
@@ -83,14 +88,24 @@ func (s Subscription) Read() {
 			// TODO: Proper validate if it's a valid youtube video
 			Instance.RoomsPlaylist[s.Room] = Instance.RoomsPlaylist[s.Room].Enqueue(VideoData{
 				Time:    0,
-				Playing: false,
+				Playing: true,
 				Url:     data.Url,
 			})
 
 			log.Println("ARR: ", Instance.RoomsPlaylist[s.Room])
 
+			res := RequestSocketMessage{
+				Action: "REQUEST",
+				Data:   Instance.RoomsPlaylist[s.Room],
+			}
+
+			jsData, _ := json.Marshal(res)
+
+			m := Message{jsData, s.Room}
+			Instance.Broadcast <- m
+
 		case END_VIDEO:
-			if itemsInPlaylist {
+			if len(Instance.RoomsPlaylist[s.Room]) > 0 {
 				Instance.RoomsPlaylist[s.Room] = Instance.RoomsPlaylist[s.Room].Unqueue()
 				log.Println("NEW ARR: ", Instance.RoomsPlaylist[s.Room])
 
