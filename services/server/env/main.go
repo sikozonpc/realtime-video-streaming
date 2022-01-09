@@ -19,5 +19,9 @@ func ParseEnv() Variables {
 
 	flag.Parse()
 
+	if len(*port) == 0 || len(*addr) == 0 {
+	return Variables{"8080", "0.0.0.0"}	
+	}
+
 	return Variables{*port, *addr}
 }
