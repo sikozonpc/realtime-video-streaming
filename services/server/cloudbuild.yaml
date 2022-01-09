@@ -5,7 +5,7 @@ steps:
       [
         "build",
         "-t",
-        "europe-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/v2g-server:$SHORT_SHA",
+        "europe-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/v2g-server:$SHORT_SHA",
         ".",
       ]
     # Docker push to Google Artifact Registry
@@ -13,7 +13,7 @@ steps:
     args:
       [
         "push",
-        "europe-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/v2g-server:$SHORT_SHA",
+        "europe-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/v2g-server:$SHORT_SHA",
       ]
   # Deploy to Cloud Run
   - name: "gcr.io/cloud-builders/gcloud"
@@ -22,7 +22,7 @@ steps:
         "run",
         "deploy",
         "v2g-server",
-        "europe-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/v2g-server:$SHORT_SHA",
+        "europe-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/v2g-server:$SHORT_SHA",
         "--region",
         "europe-west4",
         "--platform",
